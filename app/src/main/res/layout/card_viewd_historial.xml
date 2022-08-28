@@ -19,21 +19,71 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="section"
+            android:text="transactionId"
             android:textColor="@color/black"
-            android:id="@+id/geek_item_articulo_titulo"
+            android:id="@+id/geek_item_transactionId"
             android:textStyle="bold"
             android:layout_alignParentStart="true"
+            android:textSize="25dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="email"
+            android:textColor="@color/black"
+            android:id="@+id/geek_item_email"
+            android:textStyle="bold"
+            android:layout_below="@id/geek_item_transactionId"
             android:textSize="15sp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="title"
+            android:text="phoneNumber"
             android:textColor="@color/black"
-            android:id="@+id/geek_item_articulo_subtitulo"
+            android:id="@+id/geek_item_phoneNumber"
             android:textStyle="bold"
-            android:layout_below="@id/geek_item_articulo_titulo"
+            android:layout_below="@id/geek_item_email"
+            android:textSize="15sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="transactionStatus"
+            android:textColor="@color/black"
+            android:id="@+id/geek_item_transactionStatus"
+            android:textStyle="bold"
+            android:layout_below="@id/geek_item_phoneNumber"
+            android:textSize="15sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="amount"
+            android:textColor="@color/black"
+            android:id="@+id/geek_item_amount"
+            android:textStyle="bold"
+            android:layout_below="@id/geek_item_transactionStatus"
+            android:textSize="15sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="date"
+            android:textColor="@color/black"
+            android:id="@+id/geek_item_date"
+            android:textStyle="bold"
+            android:layout_below="@id/geek_item_amount"
+            android:textSize="15sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="reference"
+            android:textColor="@color/black"
+            android:id="@+id/geek_item_reference"
+            android:textStyle="bold"
+            android:layout_below="@id/geek_item_date"
             android:textSize="15sp"/>
 
 

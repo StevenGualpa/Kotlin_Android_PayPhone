@@ -3,22 +3,27 @@ package com.example.pago
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.get
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.AuthFailureError
+import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.google.android.material.textfield.TextInputEditText
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+import kotlin.collections.Map
+import kotlin.collections.MutableMap
+import kotlin.collections.set
 
 class MainActivity : AppCompatActivity(),AdapterView.OnItemClickListener {
 
@@ -31,13 +36,13 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemClickListener {
 
     //Codigos Regiones
     var itemscodigo: ArrayList<String> = ArrayList()
-    lateinit var txtreg :AutoCompleteTextView
+    lateinit var Txt_codigo :AutoCompleteTextView
     var adapterItem: ArrayAdapter<String>? = null
 
-    lateinit var inputReferencia: TextInputEditText
-    lateinit var inputtelefono: TextInputEditText
-    lateinit var inputMonto:TextInputEditText
-    var itemcodigo:String? = null
+    lateinit var txtReferencia: TextInputEditText
+    lateinit var txttelefono: TextInputEditText
+    lateinit var txtMonto:TextInputEditText
+    var selectcodigo:String? = null
 
     //Historial de Pagos
 
@@ -45,22 +50,23 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        inputReferencia = findViewById<TextInputEditText>(R.id.inputReferencia)
-        inputtelefono=findViewById<TextInputEditText>(R.id.inputNumeroCelular)
-        inputMonto=findViewById<TextInputEditText>(R.id.inputMonto)
+        CargaRecyclerView()
+        txtReferencia = findViewById<TextInputEditText>(R.id.inputReferencia)
+        txttelefono=findViewById<TextInputEditText>(R.id.inputNumeroCelular)
+        txtMonto=findViewById<TextInputEditText>(R.id.inputMonto)
         //Cargamos Regiones
         getRegions()
         adapterItem=ArrayAdapter(this,R.layout.list_item,itemscodigo)
-        txtreg.setAdapter(adapterItem)
-        txtreg.setOnItemClickListener(this)
+        Txt_codigo.setAdapter(adapterItem)
+        Txt_codigo.setOnItemClickListener(this)
         //Cargamos el Historial
-
+CargaRecyclerView()
     }
 
 
     //Metodo para Consumir Api con Regiones
     fun getRegions() {
-        txtreg =findViewById<AutoCompleteTextView>(R.id.item_list_code)
+        Txt_codigo =findViewById<AutoCompleteTextView>(R.id.item_txt_codigos)
         val queue = Volley.newRequestQueue(this)
         val JsonArrayRq = object: JsonArrayRequest(Method.GET,endPoiniapiRegions,null,
             { response->
@@ -88,56 +94,109 @@ class MainActivity : AppCompatActivity(),AdapterView.OnItemClickListener {
     fun MensajeLargo(Mensaje: String) {
         Toast.makeText(this, Mensaje.toString(), Toast.LENGTH_LONG).show()
     }
-    fun validanumero(): Boolean{
-
-        return false
-    }
 
     fun pagar(view: View?) {
 
-        val phoneNumber: String? = inputtelefono.text.toString()
-        val countryCode: String? = itemcodigo
-        val reference: String? = inputReferencia.text.toString()
-        val amount = 0
-        val amountWithoutTax = 0
-        val clientTransactionId: String? = null
+        //Valores para Envio
+        val phoneNumber: String? = txttelefono.text.toString()
+        val countryCode: String? = selectcodigo
+        val reference: String? = txtReferencia.text.toString()
+        val clientTransactionId: String? = UUID.randomUUID().toString()
         val currency: String? = "USD"
+        val amount = txtMonto.text.toString().toFloat()
+        val valor = amount * 100
+        val valorf = valor.toInt()
 
-        val queue = Volley.newRequestQueue(this)
-        var credenciales = JSONArray(
-            """[{"amount":1000,
-        "amountWithoutTax":1000,
-        "clientTransactionId":"""+UUID.randomUUID().toString()+"""",
-        "countryCode":"""+countryCode+""",
-        "currency":"""+currency+""",
-        "phoneNumber":"""+phoneNumber+""",
-        "reference":"""+reference+"""}]""".trimMargin()
-        )
-        val pagarPayPhone: JsonObjectRequest = object : JsonObjectRequest(
-            Method.POST,
-            "https://pay.payphonetodoesposible.com/api/Sale",
-            credenciales.getJSONObject(0),  // info del pago
-            Response.Listener { response ->
-                try {
-                } catch (e: JSONException) {
-                    println(e.toString())
+
+            val queue = Volley.newRequestQueue(this)
+
+            var JsonPost = JSONArray(
+                """[{"amount":$valorf,
+        "amountWithoutTax":$valorf,
+        "clientTransactionId":"$clientTransactionId",
+        "countryCode":"$countryCode",
+        "currency":"$currency",
+        "phoneNumber":"$phoneNumber",
+        "reference":"$reference"}]""".trimMargin()
+            )
+            val JsonArrayRq: JsonObjectRequest = object : JsonObjectRequest(
+                Method.POST,
+                endPointapiSale,
+                JsonPost.getJSONObject(0),  // info del pago
+                Response.Listener { response ->
+                    try {
+                        MensajeLargo("Pago Solicitado")
+                        CargaRecyclerView()
+                    } catch (e: JSONException) {
+                        println(e.toString())
+                    }
+                },
+                Response.ErrorListener { error -> println(error.toString()) }
+            ) {
+                @Throws(AuthFailureError::class)
+                override fun getHeaders(): Map<String, String> {
+                    val params: MutableMap<String, String> = java.util.HashMap()
+                    params["Authorization"] = "Bearer $Token"
+                    return params
                 }
-            },
-            Response.ErrorListener { error -> println(error.toString()) }
-        ) {
-            @Throws(AuthFailureError::class)
-            override fun getHeaders(): Map<String, String> {
-                val params: MutableMap<String, String> = java.util.HashMap()
-                params["Authorization"] = "Bearer $Token"
-                return params
             }
-        }
-        queue.add<JSONObject>(pagarPayPhone)
+            queue.add<JSONObject>(JsonArrayRq)
     }
-
+    //Salva el Codigo de la Region
     override fun onItemClick(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
         val item: String = p0?.getItemAtPosition(p2).toString()
-        itemcodigo=item
-        //MensajeLargo(item)
+        selectcodigo=item
+    }
+
+    fun CargaRecyclerView()
+    {
+        val queue = Volley.newRequestQueue(this)
+        val url: String = "https://my-json-server.typicode.com/StevenGualpa/Api_Historial/Historial"
+
+        //txtresul.text=parm
+        // Request a string response from the provided URL.
+        val stringReq = StringRequest(
+            Request.Method.GET, url,
+            { response ->
+                var strResp = response.toString()
+                var str: JSONArray = JSONArray(strResp)
+
+                //Contador
+                var index=0
+                //Cantidad de Elementos
+                var n=str.length()
+                //Listas que usaremos
+                var ditemtransactionId= arrayListOf<String>()
+                var ditememail= arrayListOf<String>()
+                var ditemphoneNumber= arrayListOf<String>()
+                var ditem_transactionStatus= arrayListOf<String>()
+                var ditemamount = arrayListOf<String>()
+                var ditemdate = arrayListOf<String>()
+                var ditemreference = arrayListOf<String>()
+
+                //Extraemos Elementos de eiquetas
+                while (index<n)
+                {
+                    var elemento: JSONObject =str.getJSONObject(index)
+
+                    ditemtransactionId.add(elemento.getString("transactionId"))
+                    ditememail.add(elemento.getString("email"))
+                    ditemphoneNumber.add(elemento.getString("phoneNumber"))
+                    ditem_transactionStatus.add(elemento.getString("transactionStatus"))
+                    ditemamount.add(elemento.getString("amount"))
+                    ditemdate.add(elemento.getString("date"))
+                    ditemreference.add(elemento.getString("reference"))
+                    index++
+
+                }
+                //MensajeLargo(list_volumenes_id.toString())
+                val recyclerView_ : RecyclerView =findViewById(R.id.RcviewHistorial)
+                val adapter_=CustomerAdapter_Historial(ditemtransactionId,ditememail, ditemphoneNumber, ditem_transactionStatus, ditemamount, ditemdate, ditemreference)
+
+                recyclerView_.layoutManager= LinearLayoutManager(this)
+                recyclerView_.adapter=adapter_
+            },
+            { Log.d("API", "that didn't work") })
+        queue.add(stringReq)
     }
 }
